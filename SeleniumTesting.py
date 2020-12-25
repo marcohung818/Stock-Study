@@ -4,28 +4,50 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
+import numpy as np
 import time
 import StockDataBase as db #import the Stock List
 chromeDriverPATH = "chromedriver.exe"
 driver = webdriver.Chrome(chromeDriverPATH)
 #nasdaqEarningUrlFormat = "https://www.nasdaq.com/market-activity/stocks/aapl/earnings" For the Quarterly EPS
 #nasdaqFinancialUrlFormat = "https://www.nasdaq.com/market-activity/stocks/aapl/financials" For the Quarterly / Annually Financial
-dataFrameCols = ["Fiscal Period", "Quarterly EPS Score", "Quarterly EPS Changed %", "Annual EPS Score", "Annual EPS Changed %", "Quarterly Revenue Score", "Quarterly Revenue Changed %", "Annual Revenue Score", "Annual Revenue Changed %", "Quarterly Gross Profit Score", "Quarterly Gross Profit Changed %", "Annual Gross Profit Score", "Annual Gross Profit Changed %"]
+dataFrameCols = ["Stock", "Fiscal Period", "Quarterly EPS Score", "Quarterly EPS Changed %", "Annual EPS Score", "Annual EPS Changed %", "Quarterly Revenue Score", "Quarterly Revenue Changed %", "Annual Revenue Score", "Annual Revenue Changed %", "Quarterly Gross Profit Score", "Quarterly Gross Profit Changed %", "Annual Gross Profit Score", "Annual Gross Profit Changed %"]
 #The Most important Data output
-output = pd.DataFrame(columns=dataFrameCols)
-
+#output = pd.DataFrame(columns=dataFrameCols)
+preTransferArray = []
 #Program Functions
 #The Main Get Stock Function
 def getStockDataMain(symbol):
+    print(symbol)
     quarterlyEpsChanged, quarterlyEpsScore = getStockQuarterlyEPS(symbol)
     quarterlyRevenueChanged, quarterlyRevenueScore = getStockQuarterlyRevenue(symbol)
     quarterlyGrossProfitChanged, quarterlyGrossProfitScore = getStockQuarterlyGrossProfit(symbol)
+    annuallyEpsChanged, annuallyEpsScore = getStockAnnualEPS(symbol)
     annuallyRevenueChanged, annuallyRevenueScore = getStockAnnualRevenue(symbol)
     annuallyGrossProfitChanged, annuallyGrossProfitScore = getStockAnnualGrossProfit(symbol)
-
-    print(quarterlyGrossProfitChanged)
-    print(quarterlyGrossProfitScore)
-    #getStockQuarterlyEPS(symbol)
+    for i in range(0 , 4):
+        array = []
+        array.append(symbol)
+        if (i != 3):
+            array.append(i + 1)
+        else:
+            array.append(None)
+        array.append(quarterlyEpsScore[i])
+        array.append(quarterlyEpsChanged[i])
+        array.append(annuallyEpsScore[i])
+        array.append(annuallyEpsChanged[i])
+        array.append(quarterlyRevenueScore[i])
+        array.append(quarterlyRevenueChanged[i])
+        array.append(annuallyRevenueScore[i])
+        array.append(annuallyRevenueChanged[i])
+        array.append(quarterlyGrossProfitScore[i])
+        array.append(quarterlyGrossProfitChanged[i])
+        array.append(annuallyGrossProfitScore[i])
+        array.append(annuallyGrossProfitChanged[i])
+        preTransferArray.append(array)
+    print(preTransferArray)
+    output = pd.DataFrame(preTransferArray, columns=dataFrameCols)
+    output.to_csv("output.csv")
     return
 
 #Get and Calculate the Quarterly Data
@@ -35,7 +57,7 @@ def getStockQuarterlyEPS(symbol):
     EpsData = []
     try:
         mainPageLoaded = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body"))
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[3]/div/div/table/tbody[2]/tr[1]/td[2]"))
         )
         #Xpath = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[3]/div/div/table/tbody[2]/tr[1]/td[2]"
         Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[3]/div/div/table/tbody[2]/tr["
@@ -52,7 +74,7 @@ def getStockQuarterlyRevenue(symbol):
     RevenueData = []
     try:
         mainPageLoaded = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body"))
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/button"))
         )
         mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/button").click()
         mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/div/button[2]").click()
@@ -71,7 +93,7 @@ def getStockQuarterlyGrossProfit(symbol):
     GrossProfitData = []
     try:
         mainPageLoaded = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body"))
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/button"))
         )
         mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/button").click()
         mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/div/button[2]").click()
@@ -86,13 +108,35 @@ def getStockQuarterlyGrossProfit(symbol):
     return countingMachine(GrossProfitData)
 
 #Get and Calculate the Annual Data
+#Get the Annually EPS - return 1.EpsChanged 2.EpsScore
+def getStockAnnualEPS(symbol):
+    driver.get("https://www.nasdaq.com/market-activity/stocks/" + str(symbol) + "/revenue-eps")
+    EpsData = []
+    try:
+        mainPageLoaded = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "/html/body"))
+        )
+        #Xpath = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]"
+        Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td["
+        #Get the Value of the Revenue
+        for i in range(1, 4):
+            EpsData.append(float(removeSingleCharacter(mainPageLoaded.find_element_by_xpath(Xpth + str(i) +"]").text, "$")))
+        location = mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/button[1]")
+        driver.execute_script("arguments[0].scrollIntoView();", location)
+        time.sleep(3)
+        location.click()
+        EpsData.append(float(removeSingleCharacter(mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]").text, "$")))
+    except:
+        driver.quit()
+        print("Error in AnnualEPS")
+    return countingMachine(EpsData)
 #Get the Annually Revenue - return 1.RevenueChanged 2.RevenueScore
 def getStockAnnualRevenue(symbol):
     driver.get("https://www.nasdaq.com/market-activity/stocks/" + str(symbol) + "/financials")
     RevenueData = []
     try:
         mainPageLoaded = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body"))
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[1]/td[1]"))
         )
         #Xpath = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[1]/td[1]"
         Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[1]/td["
@@ -109,7 +153,7 @@ def getStockAnnualGrossProfit(symbol):
     GrossProfitData = []
     try:
         mainPageLoaded = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body"))
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[3]/td[1]"))
         )
         #Xpath = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[3]/td[1]"
         Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[3]/td["
@@ -143,6 +187,9 @@ def countingMachine(data):
         score.append(1)
     else:
         score.append(0)
+    changedPercentage.append(None)
+    score.append(sum(score))
+    print(score)
     return changedPercentage, score
 #Cancel the Special Character - return a string can transfer to float
 def removeSpcialCharacter(string):
@@ -150,6 +197,10 @@ def removeSpcialCharacter(string):
     for character in string:
         if character.isalnum():
             outputString += character
+    return outputString
+#Delete one Character - return a string can transfer to flaot
+def removeSingleCharacter(string, character):
+    outputString = string.replace(character, "")
     return outputString
 
 #Check Mode Functions
@@ -168,7 +219,7 @@ def checkStockQuarterlyEPS():
     driver.get("https://www.nasdaq.com/market-activity/stocks/aapl/earnings")
     try:
         mainPageLoaded = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body"))
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[3]/div/div/table/tbody[2]/tr[1]/td[2]"))
         )
         #Xpath = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[3]/div/div/table/tbody[2]/tr[1]/td[2]"
         Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[3]/div/div/table/tbody[2]/tr["
