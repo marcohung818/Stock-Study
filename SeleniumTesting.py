@@ -27,10 +27,11 @@ def getStockDataMain(symbol):
     annuallyGrossProfitChanged, annuallyGrossProfitScore = getStockAnnualGrossProfit(symbol)
     for i in range(0 , 4):
         array = []
-        array.append(symbol)
         if (i != 3):
+            array.append(symbol)
             array.append(i + 1)
         else:
+            array.append(symbol + "-Total")
             array.append(None)
         array.append(quarterlyEpsScore[i])
         array.append(quarterlyEpsChanged[i])
@@ -45,7 +46,6 @@ def getStockDataMain(symbol):
         array.append(annuallyGrossProfitScore[i])
         array.append(annuallyGrossProfitChanged[i])
         preTransferArray.append(array)
-    print(preTransferArray)
     output = pd.DataFrame(preTransferArray, columns=dataFrameCols)
     output.to_csv("output.csv")
     return
