@@ -19,3 +19,6 @@
 [1225/030648.378:ERROR:exception_snapshot_win.cc(99)] thread ID 19552 not found in process
 [1225/030648.433:ERROR:process_reader_win.cc(123)] NtOpenThread: {拒絕存取} 程序已請求存取一物件，但未被授與存取權。 (0xc0000022)
 [1225/030648.433:ERROR:exception_snapshot_win.cc(99)] thread ID 18704 not found in process
+[1225/140326.252:ERROR:directory_reader_win.cc(43)] FindFirstFile: 系統找不到指定的路徑。 (0x3)
+[1225/144219.916:ERROR:directory_reader_win.cc(43)] FindFirstFile: 系統找不到指定的路徑。 (0x3)
+[1225/144406.020:ERROR:directory_reader_win.cc(43)] FindFirstFile: 系統找不到指定的路徑。 (0x3)
