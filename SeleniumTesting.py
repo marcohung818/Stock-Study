@@ -49,7 +49,7 @@ def getStockDataMain(symbol):
     output = pd.DataFrame(preTransferArray, columns=dataFrameCols)
     output.to_csv("output.csv")
     return
-
+    
 #Get and Calculate the Quarterly Data
 #Get the Quarterly EPS -  return 1.EpsChanged 2.EpsScore
 def getStockQuarterlyEPS(symbol):
