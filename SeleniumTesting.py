@@ -65,8 +65,8 @@ def getStockQuarterlyEPS(symbol):
         for i in range(1, 5):
             EpsData.append(float(mainPageLoaded.find_element_by_xpath(Xpth + str(i) +"]/td[2]").text))
     except:
-        driver.quit()
         print("Error in QuarterlyEPS")
+        driver.quit()
     return countingMachine(EpsData)
 #Get the Quarterly Revenue - return 1.RevenueChanged 2.RevenueScore
 def getStockQuarterlyRevenue(symbol):
@@ -77,6 +77,7 @@ def getStockQuarterlyRevenue(symbol):
             EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/button"))
         )
         mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/button").click()
+        time.sleep(2)
         mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/div[2]/div[2]/div/button[2]").click()
         #Xpath = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[1]/td[1]"
         Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[3]/div[2]/div[1]/table/tbody/tr[1]/td["
@@ -84,8 +85,9 @@ def getStockQuarterlyRevenue(symbol):
         for i in range(1, 5):
             RevenueData.append(float(removeSpcialCharacter(mainPageLoaded.find_element_by_xpath(Xpth + str(i) +"]").text)))
     except:
-        driver.quit()
         print("Error in AnnualRevenue")
+        driver.quit()
+        
     return countingMachine(RevenueData)
 #Get the Quarterly Gross Profit - return 1.GrossProfitChanged 2.GrossProfitScore
 def getStockQuarterlyGrossProfit(symbol):
@@ -114,21 +116,25 @@ def getStockAnnualEPS(symbol):
     EpsData = []
     try:
         mainPageLoaded = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "/html/body"))
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]"))
         )
         #Xpath = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]"
         Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td["
         #Get the Value of the Revenue
         for i in range(1, 4):
             EpsData.append(float(removeSingleCharacter(mainPageLoaded.find_element_by_xpath(Xpth + str(i) +"]").text, "$")))
+        
         location = mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/button[1]")
         driver.execute_script("arguments[0].scrollIntoView();", location)
         time.sleep(3)
         location.click()
-        EpsData.append(float(removeSingleCharacter(mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]").text, "$")))
+        PageLoaded = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]"))
+        )
+        EpsData.append(float(removeSingleCharacter(PageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]").text, "$")))
     except:
-        driver.quit()
         print("Error in AnnualEPS")
+        driver.quit()
     return countingMachine(EpsData)
 #Get the Annually Revenue - return 1.RevenueChanged 2.RevenueScore
 def getStockAnnualRevenue(symbol):
