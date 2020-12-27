@@ -28,8 +28,6 @@ def getStockDataMain(symbol):
     annuallyEpsChanged, annuallyEpsScore = getStockAnnualEPS(symbol)
     annuallyRevenueChanged, annuallyRevenueScore = getStockAnnualRevenue(symbol)
     annuallyGrossProfitChanged, annuallyGrossProfitScore = getStockAnnualGrossProfit(symbol)
-    
-    arrays = []
     for i in range(0 , period_to_get):
         array = []
         if (i != period_to_get - 1):
@@ -50,12 +48,10 @@ def getStockDataMain(symbol):
         array.append(quarterlyGrossProfitChanged[i])
         array.append(annuallyGrossProfitScore[i])
         array.append(annuallyGrossProfitChanged[i])
-        
-        arrays.append(array)
         #preTransferArray.append(array)
 #    output = pd.DataFrame(preTransferArray, columns=dataFrameCols)
 #    output.to_csv("output.csv")
-    return arrays
+    return array
 
 #Get and Calculate the Quarterly Data
 #Get the Quarterly EPS -  return 1.EpsChanged 2.EpsScore
@@ -133,10 +129,8 @@ def getStockAnnualEPS(symbol):
         Xpth = "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td["
         #Get the Value of the Revenue
         for i in range(1, period_to_get):
-            EpsTemp = removeSingleCharacter(mainPageLoaded.find_element_by_xpath(Xpth + str(i) +"]").text, "$")
-            for c in ['(', ')']:
-                EpsTemp = EpsTemp.replace(c, '')
-            EpsData.append(float(EpsTemp))
+            EpsData.append(float(removeSingleCharacter(mainPageLoaded.find_element_by_xpath(Xpth + str(i) +"]").text, "$")))
+        
         location = mainPageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[2]/button[1]")
         driver.execute_script("arguments[0].scrollIntoView();", location)
         time.sleep(3)
@@ -144,10 +138,7 @@ def getStockAnnualEPS(symbol):
         PageLoaded = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]"))
         )
-        EpsTemp =  removeSingleCharacter(PageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]").text, "$")
-        for c in ['(', ')']:
-            EpsTemp = EpsTemp.replace(c, '')
-        EpsData.append(float(EpsTemp))
+        EpsData.append(float(removeSingleCharacter(PageLoaded.find_element_by_xpath("/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div/div[1]/table/tbody/tr[19]/td[1]").text, "$")))
     except:
         print("Error in AnnualEPS")
         #driver.quit()
@@ -191,13 +182,13 @@ def getStockAnnualGrossProfit(symbol):
 def countingMachine(data):
     print(data)
     #return if no data
-    if not data or (len(data) < period_to_get):
-        return [None]*period_to_get, [None]*period_to_get
+    if not data:
+        return [None]*4, [None]*4
     score = []
     changedPercentage = []
     #Calculate the change
     for i in range(0, period_to_get-1):
-        Changed = ((data[i] - data[i+1]) / data[i+1] - 0.0000001) * 100
+        Changed = ((data[i] - data[i+1]) / data[i+1]) * 100
         changedPercentage.append(round(Changed, 2))
     #Calculate the Score
     score = [2**((period_to_get-1)-1-index) if change >= 0 else 0 for index, change in enumerate(changedPercentage)]
@@ -274,9 +265,10 @@ for industry, stocks in db.SP500.items():
     preTransferArray = []
     for stock in stocks:
         try:
-            preTransferArray += getStockDataMain(stock)
+            preTransferArray.append(getStockDataMain(stock))
         except:
             print(f'Skipped {stock}')
+            1/0
     output = pd.DataFrame(preTransferArray, columns=dataFrameCols)
     output.to_csv(f"SP500_{industry}.csv")
     print(f'End of scraping {industry}')
