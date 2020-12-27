@@ -4,32 +4,60 @@ import StockDataBase as db #import the Stock List
 import yfinance as yf
 import time
 
+#Global Values
+period_to_get = 4
+stocksNormalData = []
+stocksTotalScore = []
+
 def getRevenueAndGrossProfit(symbol):
     stockTicker = yf.Ticker(symbol)
-    getAnnuallyGrossProfit(stockTicker)
-    getQuarterlyGrossProfit(stockTicker)
-    getAnnuallyRevenue(stockTicker)
-    getQuarterlyRevenue(stockTicker)
+    print(stockTicker.financials)
+    print(stockTicker.quarterly_financials)
+    qGpChanged, qGpScore, qGpTotalScore = getQuarterlyGrossProfit(stockTicker)
+    aGpChanged, aGpScore, aGpTotalScore = getAnnuallyGrossProfit(stockTicker)
+    qRChanged, qRScore, qRTotalScore = getQuarterlyRevenue(stockTicker)
+    aRChanged, aRScore, aRTotalScore = getAnnuallyRevenue(stockTicker)
+    '''
+    input the data into an array
+    for i in range(0, period_to_get - 1):
+        array = []
+        array.append(aGpScore)
+        array.append(aGpChanged)
+        array.append(qGpScore)
+        array.append(qGpChanged)
+        array.append(aRChanged)
+        array.append(aRScore)
+        array.append(qRChanged)
+        array.append(qRScore)
+        stocksNormalData.append(array)
+    for i in range(0, period_to_get - 1)
+        array = []
+        array.append(qGpTotalScore)
+        array.append(aGpTotalScore)
+        array.append(qRTotalScore)
+        array.append(aRTotalScore)
+        stocksTotalScore.append(array)
+    '''
 
-def getAnnuallyGrossProfit(ticker):
+def getAnnuallyGrossProfit(stockTicker):
     grossProfit = []
     for i in range(0, 4):
         grossProfit.append(stockTicker.financials.loc['Gross Profit', : ][i])
     return countingMachine(grossProfit)
 
-def getQuarterlyGrossProfit(ticker):
+def getQuarterlyGrossProfit(stockTicker):
     grossProfit = []
     for i in range(0, 4):
         grossProfit.append(stockTicker.quarterly_financials.loc['Gross Profit', : ][i])
     return countingMachine(grossProfit)
 
-def getAnnuallyRevenue(ticker):
+def getAnnuallyRevenue(stockTicker):
     revenue = []
     for i in range(0, 4):
         revenue.append(stockTicker.financials.loc['Total Revenue', : ][i])
     return countingMachine(revenue)
 
-def getQuarterlyRevenue(ticker):
+def getQuarterlyRevenue(stockTicker):
     revenue = []
     for i in range(0, 4):
         revenue.append(stockTicker.quarterly_financials.loc['Total Revenue', : ][i])
@@ -41,9 +69,11 @@ def getStockDataMain(symbol):
 
 #Pass the data - return 1. Percentage Changed(Size = 3) 2. Score(Size = 3) 3.totalScore(Size = 1)
 def countingMachine(data):
-    period_to_get = 4
+
     print(data)
+    return [None]*period_to_get, [None]*period_to_get, None
     #return empty array if no data
+    '''
     if not data or (len(data) < period_to_get):
         return [None]*period_to_get, [None]*period_to_get, None
     else:
@@ -58,15 +88,11 @@ def countingMachine(data):
         # sum of score
         totalScore = sum(score)
         return changedPercentage, score, totalScore
-
+    '''
 def main():
     print("Please input the Stock Symbol")
     symbol = input()
-    #getStockDataMain(symbol)
-    test = [20, -20, 20]
-    testpd = pd.DataFrame()
-    testpd.append(test)
-    print(testpd)
+    getStockDataMain(symbol)
     return
 
 main()
