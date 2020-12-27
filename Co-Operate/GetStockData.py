@@ -4,14 +4,12 @@ import StockDataBase as db #import the Stock List
 import yfinance as yf
 import time
 
+def getRevenueGrossProfit(symbol):
+    stockTicker = yf.Ticker(symbol)
+    print(stockTicker .financials)
+
 def getStockDataMain(symbol):
-    AAPLstock = yf.Ticker('APD')
-    print(AAPLstock.financials)
-    print(AAPLstock.balance_sheet)
-    print(AAPLstock.cashflow)
-    print(AAPLstock.earnings)
-    print(AAPLstock.info)
-    print(AAPLstock.splits)
+    getRevenueGrossProfit(symbol)
 
 def main():
     print("Please input the Stock Symbol")
