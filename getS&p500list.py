@@ -103,7 +103,7 @@ def get_single_stock_info():
         print("error")
 
 def debug_mode():
-    AAPLstock = yf.Ticker('AAPL')
+    AAPLstock = yf.Ticker('APD')
     print(AAPLstock.financials)
     print(AAPLstock.balance_sheet)
     print(AAPLstock.cashflow)
