@@ -28,7 +28,7 @@ def getStockDataMain(symbol):
     annuallyEpsChanged, annuallyEpsScore = getStockAnnualEPS(symbol)
     annuallyRevenueChanged, annuallyRevenueScore = getStockAnnualRevenue(symbol)
     annuallyGrossProfitChanged, annuallyGrossProfitScore = getStockAnnualGrossProfit(symbol)
-    
+
     arrays = []
     for i in range(0 , period_to_get):
         array = []
@@ -50,7 +50,7 @@ def getStockDataMain(symbol):
         array.append(quarterlyGrossProfitChanged[i])
         array.append(annuallyGrossProfitScore[i])
         array.append(annuallyGrossProfitChanged[i])
-        
+
         arrays.append(array)
         #preTransferArray.append(array)
 #    output = pd.DataFrame(preTransferArray, columns=dataFrameCols)
@@ -280,6 +280,6 @@ for industry, stocks in db.SP500.items():
     output = pd.DataFrame(preTransferArray, columns=dataFrameCols)
     output.to_csv(f"SP500_{industry}.csv")
     print(f'End of scraping {industry}')
-        
+
 driver.quit()
 #main()
