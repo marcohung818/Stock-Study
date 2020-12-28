@@ -22,8 +22,15 @@ def getPercentageChange(l, period_to_get=period_to_get):
     except:
         return []
     # added np.sign to deal with positive -> negative/ negative -> positive cases
-    changed = [round(np.sign(l[i+1]) * 100 * (l[i] - l[i+1])/(l[i+1]+(np.sign(l[i+1])*0.000001)), 2) for i in range(0, period_to_get-1)]
-    return changed
+    changes = []
+    for i in range(0, period_to_get-1):
+        change = round(100 * (l[i] - l[i+1])/(l[i+1]+(np.sign(l[i+1])*0.000001)), 2)
+        # case 舊負新正 AND 舊負新更負
+        if l[i+1] < 0 and (l[i] >= 0 or l[i] < l[i+1]):
+            change = -1 * change 
+        changes.append(change)
+    #changes = [round(np.sign(l[i+1]) * 100 * (l[i] - l[i+1])/(l[i+1]+(np.sign(l[i+1])*0.000001)), 2) for i in range(0, period_to_get-1)]
+    return changes
 
 #Calculate the Score
 def getScore(l, period_to_get=period_to_get):
@@ -45,7 +52,9 @@ def fetch(symbols):
     for symbol in symbols:
     
         URL_API = URL_API_BASE.format(symbol.upper())
-        while (True):
+        
+        retries = 0
+        while (retries < 3):
             r = requests.get(URL_API)
             time.sleep(5)
             if 'market_data' in r.json().keys():
@@ -53,14 +62,16 @@ def fetch(symbols):
                 break
             else:
                 print(f'Rescraping {symbol}')
-                time.sleep(5)
+                retries += 1
+                time.sleep(15)
             
     print('End of fetching')
     return raw_data
 
 # for parsing
 # index order
-index_order = ['Quarterly Diluted Normalized EPS', 'Quarterly Revenue', 'Quarterly Gross Profit', 'Annual Diluted Normalized EPS', 'Annual Revenue', 'Annual Gross Profit']
+#index_order = ['Quarterly Diluted Normalized EPS', 'Quarterly Revenue', 'Quarterly Gross Profit', 'Annual Diluted Normalized EPS', 'Annual Revenue', 'Annual Gross Profit']
+index_order = ['Quarterly Diluted Normalized EPS', 'Annual Diluted Normalized EPS']
 def parse(raw_data):
     
     parsed_data = []
@@ -73,22 +84,66 @@ def parse(raw_data):
         try:
             data_list = [
                     data['market_data']['financial_statements']['income']['interim']['Diluted Normalized EPS'],
-                    data['market_data']['financial_statements']['income']['interim']['Total Revenue'],
-                    data['market_data']['financial_statements']['income']['interim']['Gross Profit'],
+                    #data['market_data']['financial_statements']['income']['interim']['Total Revenue'],
+                    #data['market_data']['financial_statements']['income']['interim']['Gross Profit'],
                     data['market_data']['financial_statements']['income']['annual']['Diluted Normalized EPS'],
-                    data['market_data']['financial_statements']['income']['annual']['Total Revenue'],
-                    data['market_data']['financial_statements']['income']['annual']['Gross Profit']
+                    #data['market_data']['financial_statements']['income']['annual']['Total Revenue'],
+                    #data['market_data']['financial_statements']['income']['annual']['Gross Profit']
                     ]
         except:
-            1/0
-            for i in range(10):
-                print("******************")
+            print("******************")
             print(f"Skipped {data['ric']}")
-            for i in range(10):
-                print("******************")
+            print("******************")
+            ### period data
+            for period in range(0, period_to_get-1):
+                output = {
+                        'Stock': data['ric'],
+                        'Fiscal Period': period + 1,
+                        }
+                for i, name in enumerate(index_order):
+                    output[f'{name} Score'] = None
+                    output[f'{name} % Change'] = None
+                    #output[f'{name} Sign'] = sign_list[i][period]
+                parsed_data.append(output)
+            ### final score
+            output_score = {
+                'Stock': data['ric'],
+                }
+            
+            for i, name in enumerate(index_order):
+                output_score[f'{name} Total Score'] = None
+            parsed_data_score.append(output_score)
             time.sleep(1)
             continue
+        
+        # check data length
+        not_enough_data = False
+        for row in data_list:
+            if len(row) < period_to_get:
+                not_enough_data = True
+        # remain the rows empty if not enough data
+        if not_enough_data:
+            ### period data
+            for period in range(0, period_to_get-1):
+                output = {
+                        'Stock': data['ric'],
+                        'Fiscal Period': period + 1,
+                        }
+                for i, name in enumerate(index_order):
+                    output[f'{name} Score'] = None
+                    output[f'{name} % Change'] = None
+                    #output[f'{name} Sign'] = sign_list[i][period]
+                parsed_data.append(output)
+            ### final score
+            output_score = {
+                'Stock': data['ric'],
+                }
             
+            for i, name in enumerate(index_order):
+                output_score[f'{name} Total Score'] = None
+            parsed_data_score.append(output_score)
+            continue
+
         #------------------------------- Calculate Scores---------------------------#
         # list of values
         value_list = [[float(x['value']) for x in d] for d in data_list]
@@ -101,7 +156,7 @@ def parse(raw_data):
         scoreTotal_list = [sum(score) for score in score_list]
         
         # list of sign of new value
-        sign_list = [['P' if np.sign(v) == 1 else 'N' for v in vs[:period_to_get-1]] for vs in value_list]
+        #sign_list = [['P' if np.sign(v) == 1 else 'N' for v in vs[:period_to_get-1]] for vs in value_list]
         
         ### period data
         for period in range(0, period_to_get-1):
@@ -112,7 +167,7 @@ def parse(raw_data):
             for i, name in enumerate(index_order):
                 output[f'{name} Score'] = score_list[i][period]
                 output[f'{name} % Change'] = percentageChange_list[i][period]
-                output[f'{name} Sign'] = sign_list[i][period]
+                #output[f'{name} Sign'] = sign_list[i][period]
             parsed_data.append(output)
         
         ### final score
@@ -139,7 +194,8 @@ def store(parsed_data, parsed_data_score, industry):
     
 for industry, stocks in db.SP500.items():
     
-    if industry in ['Basic Materials', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive', 'Energy']:
+    if industry in ['Basic Materials', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive', 'Energy', \
+                    'Financial Services', 'Healthcare', 'Industrials', 'Real Estate', 'Technology']:
         continue
     
     print(f'Start scraping {industry}')
