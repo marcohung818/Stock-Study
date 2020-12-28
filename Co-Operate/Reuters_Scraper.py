@@ -194,9 +194,9 @@ def store(parsed_data, parsed_data_score, industry):
     
 for industry, stocks in db.SP500.items():
     
-    if industry in ['Basic Materials', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive', 'Energy', \
-                    'Financial Services', 'Healthcare', 'Industrials', 'Real Estate', 'Technology']:
-        continue
+    #if industry in ['Basic Materials', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive', 'Energy', \
+    #                'Financial Services', 'Healthcare', 'Industrials', 'Real Estate', 'Technology']:
+    #    continue
     
     print(f'Start scraping {industry}')
     raw_data = fetch(stocks)
