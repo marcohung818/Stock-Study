@@ -103,13 +103,8 @@ def get_single_stock_info():
         print("error")
 
 def debug_mode():
-    AAPLstock = yf.Ticker('APD')
+    AAPLstock = yf.Ticker('GOOG')
     print(AAPLstock.financials)
-    print(AAPLstock.balance_sheet)
-    print(AAPLstock.cashflow)
-    print(AAPLstock.earnings)
-    print(AAPLstock.info)
-    print(AAPLstock.splits)
     #AAPLstock.quarterly_financials.to_csv('AAPL.csv')
     #TSLAstok = yf.Ticker('TSLA')
     #TSLAstok.financials.to_csv('TSLA.csv')

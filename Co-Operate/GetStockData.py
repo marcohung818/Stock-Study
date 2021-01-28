@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
-import StockDataBase as db #import the Stock List
+import StockDataBase as SP500_normal_db #import the Stock List
+import Reuters_StockDataBase as db #import the Stock List
+import requests
 import yfinance as yf
 import time
 
 #Global Values
 period_to_get = 4
+URL_BASE = 'https://www.reuters.com'
+URL_API_BASE = 'https://www.reuters.com/companies/api/getFetchCompanyFinancials/{}'
 
 #Get the Revenue and GrossProfit by yfinance Library - return 1. qGpChanged 2. qGpScore 3.qGpTotalScore 4.aGpChanged 5. aGpScore 6. aGpTotalScore 7. qRChanged 8. qRScore 9. qRTotalScore 10. aRChanged 11. aRScore 12. aRTotalScore (All Size = 3)
 def getRevenueAndGrossProfit(symbol):
@@ -39,6 +43,15 @@ def getQuarterlyRevenue(stockTicker):
     for i in range(0, 4):
         revenue.append(stockTicker.quarterly_financials.loc['Total Revenue', : ][i])
     return countingMachine(revenue)
+# Get the Eps Data
+def getEps(symbol):
+    return
+# Get the Quarterly Eps by request
+def getQuarterlyEps(symbol):
+    return
+# Get the Annually Eps by request
+def getAnnuallyEps(symbol):
+    return
 #The Main function to get and cal the stock data - return 1. normalArrays(Size = 14) 2. totalArrays(Size = 8)
 def getStockDataMain(symbol):
     normalArrays = []
@@ -52,6 +65,7 @@ def getStockDataMain(symbol):
     totalArray.append(calSum((totalArray)))
     totalArrays.append(totalArray)
     return normalArrays, totalArrays
+
 
 #Pass the data - return 1. Percentage Changed(Size = 3) 2. Score(Size = 3) 3.totalScore(Size = 1)
 def countingMachine(data):
@@ -85,18 +99,7 @@ def calSum(array):
 def main():
     normalDataFrameCols = ["Stock", "Period", "Quarterly Gross Profit Score", "Quarterly Gross Profit Changed %", "Annual Gross Profit Score", "Annual Gross Profit Changed %", "Quarterly Revenue Score", "Quarterly Revenue Changed %", "Annual Revenue Score", "Annual Revenue Changed %", "Quarterly EPS Score", "Quarterly EPS Changed %", "Annual EPS Score", "Annual EPS Changed %"]
     totalDataFrameCols = ["Stock", "Total Quarterly Gross Profit Score", "Total Annual Gross Profit Score", "Total Quarterly Revenue Score", "Total Annual Revenue Score", "Total Quarterly EPS Score", "Total Annual EPS Score", "Total Score"]
-    '''
-    #print("Please input the Stock Symbol")
-    #symbol = input()
-    mainArray = getStockDataMain(symbol)
-    normalArrays +=  mainArray[0]
-    totalArrays += mainArray[1]
-    normalDataOutput = pd.DataFrame(normalArrays, columns = normalDataFrameCols)
-    totalScoreOutput = pd.DataFrame(totalArrays, columns = totalDataFrameCols)
-    normalDataOutput.to_csv("Normaltesting.csv", index = False)
-    totalScoreOutput.to_csv("Totaltesting.csv" , index = False)
-    '''
-    for industry, stocks in db.SP500.items():
+    for industry, stocks in SP500_normal_db.SP500.items():
         normalArrays = []
         totalArrays = []
         for stock in stocks:
