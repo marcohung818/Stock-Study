@@ -102,9 +102,11 @@ def get_single_stock_info():
     except KeyError:
         print("error")
 
-def debug_mode():
-    AAPLstock = yf.Ticker('GOOG')
-    print(AAPLstock.financials)
+def debug_mode(stock):
+    stock = yf.Ticker(stock)
+    print(stock)
+    print(stock.financials)
+    print(stock.info)
     #AAPLstock.quarterly_financials.to_csv('AAPL.csv')
     #TSLAstok = yf.Ticker('TSLA')
     #TSLAstok.financials.to_csv('TSLA.csv')
@@ -134,4 +136,5 @@ with open("output.txt", "w") as txt:
     for line in SP500ConsumerStocks:
         txt.write("\'" + line + "\' ")
 '''
-main()
+val = input("debug stock: ")
+debug_mode(val)
