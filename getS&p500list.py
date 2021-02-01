@@ -105,7 +105,7 @@ def get_single_stock_info():
 def debug_mode(stock):
     stock = yf.Ticker(stock)
     print(stock)
-    print(stock.financials)
+    print(stock.quarterly_financials)
     print(stock.info)
     #AAPLstock.quarterly_financials.to_csv('AAPL.csv')
     #TSLAstok = yf.Ticker('TSLA')

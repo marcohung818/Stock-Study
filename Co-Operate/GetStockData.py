@@ -9,7 +9,7 @@ import time
 import json
 import re
 
-#Url 
+#Url
 Url_eps_annual = "https://www.macrotrends.net/assets/php/fundamental_iframe.php?t={}&type=eps-earnings-per-share-diluted&statement=income-statement&freq=A"
 Url_eps_quarter = "https://www.macrotrends.net/assets/php/fundamental_iframe.php?t={}&type=eps-earnings-per-share-diluted&statement=income-statement&freq=Q"
 #Headers
@@ -58,7 +58,7 @@ def getQuarterlyEps(symbol):
     time.sleep(3)
     # v2 for quarter
     data_quarter = json.loads(re.search('chartData = (\[.+?\])', r_quarter.text).group(1))
-    parsed_data = {x['date']:x['v1'] for x in data_quarter} 
+    parsed_data = {x['date']:x['v1'] for x in data_quarter}
     # get values of periods period_to_get
     eps = list(parsed_data.values())[-1*period_to_get:]
     eps.reverse()
@@ -70,7 +70,7 @@ def getAnnuallyEps(symbol):
     time.sleep(3)
     # v1 for annual
     data_annual = json.loads(re.search('chartData = (\[.+?\])', r_annual.text).group(1))
-    parsed_data = {x['date']:x['v1'] for x in data_annual} 
+    parsed_data = {x['date']:x['v1'] for x in data_annual}
     # get values of periods period_to_get
     eps = list(parsed_data.values())[-1*period_to_get:]
     eps.reverse()
@@ -127,11 +127,11 @@ def countingMachine(data, period_to_get = period_to_get, get_score = False):
             if (data[i + 1] < 0 and data[i] > 0) or (data[i + 1] < 0 and data[i] < 0 and data[i] < data[i + 1]):
                 Changed *= -1
             changedPercentage.append(round(Changed, 2))
-        
+
         # get score of percentage change
         if not get_score:
             return countingMachine(changedPercentage, period_to_get-1, get_score = True)
-    
+
         #Calculate the Score
         score = [2**((period_to_get-1)-1-index) if change > 0 else 0 for index, change in enumerate(changedPercentage)]
         # sum of score
@@ -150,7 +150,7 @@ def getStockDataFromXlsx(market):
     marketStocksXlsx = market + ".xlsx"
     stocksList = pd.read_excel(marketStocksXlsx)
     return stocksList['Symbol'].tolist()
-1/0
+
 def main():
     normalDataFrameCols = ["Stock", "Period", "Quarterly Gross Profit Score", "Quarterly Gross Profit Changed %", "Annual Gross Profit Score", "Annual Gross Profit Changed %", "Quarterly Revenue Score", "Quarterly Revenue Changed %", "Annual Revenue Score", "Annual Revenue Changed %", "Quarterly EPS Score", "Quarterly EPS Changed %", "Annual EPS Score", "Annual EPS Changed %"]
     #totalDataFrameCols = ["Stock", "Total Quarterly Gross Profit Score", "Total Annual Gross Profit Score", "Total Quarterly Revenue Score", "Total Annual Revenue Score", "Total Quarterly EPS Score", "Total Annual EPS Score", "Total Score"]
