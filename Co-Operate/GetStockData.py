@@ -6,6 +6,15 @@ import requests
 import yfinance as yf
 import time
 
+import json
+import re
+
+#Url 
+Url_eps_annual = "https://www.macrotrends.net/assets/php/fundamental_iframe.php?t={}&type=eps-earnings-per-share-diluted&statement=income-statement&freq=A"
+Url_eps_quarter = "https://www.macrotrends.net/assets/php/fundamental_iframe.php?t={}&type=eps-earnings-per-share-diluted&statement=income-statement&freq=Q"
+#Headers
+headers = {"User-Agent" : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'}
+
 #Global Values
 period_to_get = 4
 
@@ -42,29 +51,70 @@ def getAnnuallyRevenue(stockTicker):
     for i in range(0, 4):
         revenue.append(stockTicker.financials.loc['Total Revenue', : ][i])
     return countingMachine(revenue)
+
 # Get the Quarterly Eps by request
 def getQuarterlyEps(symbol):
-    return
+    r_quarter = requests.get(Url_eps_quarter.format(symbol), headers=headers)
+    time.sleep(3)
+    # v2 for quarter
+    data_quarter = json.loads(re.search('chartData = (\[.+?\])', r_quarter.text).group(1))
+    parsed_data = {x['date']:x['v1'] for x in data_quarter} 
+    # get values of periods period_to_get
+    eps = list(parsed_data.values())[-1*period_to_get:]
+    eps.reverse()
+    return countingMachine(eps)
+
 # Get the Annually Eps by request
 def getAnnuallyEps(symbol):
-    return
+    r_annual = requests.get(Url_eps_annual.format(symbol), headers=headers)
+    time.sleep(3)
+    # v1 for annual
+    data_annual = json.loads(re.search('chartData = (\[.+?\])', r_annual.text).group(1))
+    parsed_data = {x['date']:x['v1'] for x in data_annual} 
+    # get values of periods period_to_get
+    eps = list(parsed_data.values())[-1*period_to_get:]
+    eps.reverse()
+    return countingMachine(eps)
 
 #The Main function to get and cal the stock data - return 1. normalArrays(Size = 14) 2. totalArrays(Size = 8)
 def getStockDataMain(symbol):
     normalArrays = []
     totalArrays = []
     qGpChanged, qGpScore, qGpTotalScore, aGpChanged, aGpScore, aGpTotalScore, qRChanged, qRScore, qRTotalScore, aRChanged, aRScore, aRTotalScore = getRevenueAndGrossProfit(symbol)
+    #EPS
+    qEpsChanged, qEpsScore, qEpsTotalScore = getQuarterlyEps(symbol)
+    aEpsChanged, aEpsScore, aEpsTotalScore = getAnnuallyEps(symbol)
     #input the data into an array
-    for i in range(0, period_to_get - 1):
-        array = [symbol, i + 1, qGpScore[i], qGpChanged[i], aGpScore[i], aGpChanged[i], qRScore[i], qRChanged[i], aRScore[i], aRChanged[i], None, None, None, None]
+    for i in range(0, period_to_get - 1 - 1):
+        array = [symbol, i + 1, qGpScore[i], qGpChanged[i], aGpScore[i], aGpChanged[i], qRScore[i], qRChanged[i], aRScore[i], aRChanged[i], qEpsChanged[i], qEpsScore[i], aEpsChanged[i], aEpsScore[i]]
         normalArrays.append(array)
-    totalArray = [symbol, qGpTotalScore, aGpTotalScore, qRTotalScore, aRTotalScore, None, None]
+    totalArray = [symbol, qGpTotalScore, aGpTotalScore, qRTotalScore, aRTotalScore, qEpsTotalScore, aEpsTotalScore]
     totalArray.append(calSum((totalArray)))
     totalArrays.append(totalArray)
     return normalArrays, totalArrays
 
 #Pass the data - return 1. Percentage Changed(Size = 3) 2. Score(Size = 3) 3.totalScore(Size = 1)
-def countingMachine(data):
+#def countingMachine(data):
+#    #return empty array if no data
+#    if not data or (len(data) < period_to_get):
+#        return [None]*period_to_get, [None]*period_to_get, None
+#    else:
+#        score = []
+#        changedPercentage = []
+#        #Calculate the change
+#        for i in range(0, period_to_get - 1):
+#            Changed = ((data[i] - data[i + 1]) / data[i + 1] - 0.0000001) * 100
+#            if (data[i + 1] < 0 and data[i] > 0) or (data[i + 1] < 0 and data[i] < 0 and data[i] < data[i + 1]):
+#                Changed *= -1
+#            changedPercentage.append(round(Changed, 2))
+#        #Calculate the Score
+#        score = [2**((period_to_get-1)-1-index) if change >= 0 else 0 for index, change in enumerate(changedPercentage)]
+#        # sum of score
+#        totalScore = sum(score)
+#        return changedPercentage, score, totalScore
+
+## New version
+def countingMachine(data, period_to_get = period_to_get, get_score = False):
     #return empty array if no data
     if not data or (len(data) < period_to_get):
         return [None]*period_to_get, [None]*period_to_get, None
@@ -77,8 +127,13 @@ def countingMachine(data):
             if (data[i + 1] < 0 and data[i] > 0) or (data[i + 1] < 0 and data[i] < 0 and data[i] < data[i + 1]):
                 Changed *= -1
             changedPercentage.append(round(Changed, 2))
+        
+        # get score of percentage change
+        if not get_score:
+            return countingMachine(changedPercentage, period_to_get-1, get_score = True)
+    
         #Calculate the Score
-        score = [2**((period_to_get-1)-1-index) if change >= 0 else 0 for index, change in enumerate(changedPercentage)]
+        score = [2**((period_to_get-1)-1-index) if change > 0 else 0 for index, change in enumerate(changedPercentage)]
         # sum of score
         totalScore = sum(score)
         return changedPercentage, score, totalScore
@@ -95,7 +150,7 @@ def getStockDataFromXlsx(market):
     marketStocksXlsx = market + ".xlsx"
     stocksList = pd.read_excel(marketStocksXlsx)
     return stocksList['Symbol'].tolist()
-
+1/0
 def main():
     normalDataFrameCols = ["Stock", "Period", "Quarterly Gross Profit Score", "Quarterly Gross Profit Changed %", "Annual Gross Profit Score", "Annual Gross Profit Changed %", "Quarterly Revenue Score", "Quarterly Revenue Changed %", "Annual Revenue Score", "Annual Revenue Changed %", "Quarterly EPS Score", "Quarterly EPS Changed %", "Annual EPS Score", "Annual EPS Changed %"]
     #totalDataFrameCols = ["Stock", "Total Quarterly Gross Profit Score", "Total Annual Gross Profit Score", "Total Quarterly Revenue Score", "Total Annual Revenue Score", "Total Quarterly EPS Score", "Total Annual EPS Score", "Total Score"]
