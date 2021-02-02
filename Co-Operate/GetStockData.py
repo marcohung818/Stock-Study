@@ -55,9 +55,13 @@ def getAnnuallyRevenue(stockTicker):
 # Get the Quarterly Eps by request
 def getQuarterlyEps(symbol):
     r_quarter = requests.get(Url_eps_quarter.format(symbol), headers=headers)
-    time.sleep(3)
+    time.sleep(1)
     # v2 for quarter
-    data_quarter = json.loads(re.search('chartData = (\[.+?\])', r_quarter.text).group(1))
+    try:
+        data_quarter = json.loads(re.search('chartData = (\[.+?\])', r_quarter.text).group(1))
+    except:
+        print('Error when getting QuarterlyEps of ' + symbol)
+        return
     parsed_data = {x['date']:x['v1'] for x in data_quarter}
     # get values of periods period_to_get
     eps = list(parsed_data.values())[-1*period_to_get:]
@@ -67,9 +71,13 @@ def getQuarterlyEps(symbol):
 # Get the Annually Eps by request
 def getAnnuallyEps(symbol):
     r_annual = requests.get(Url_eps_annual.format(symbol), headers=headers)
-    time.sleep(3)
+    time.sleep(1)
     # v1 for annual
-    data_annual = json.loads(re.search('chartData = (\[.+?\])', r_annual.text).group(1))
+    try:
+        data_annual = json.loads(re.search('chartData = (\[.+?\])', r_annual.text).group(1))
+    except:
+        print('Error when getting AnnuallyEps of ' + symbol)
+        return
     parsed_data = {x['date']:x['v1'] for x in data_annual}
     # get values of periods period_to_get
     eps = list(parsed_data.values())[-1*period_to_get:]
@@ -86,7 +94,7 @@ def getStockDataMain(symbol):
     aEpsChanged, aEpsScore, aEpsTotalScore = getAnnuallyEps(symbol)
     #input the data into an array
     for i in range(0, period_to_get - 1 - 1):
-        array = [symbol, i + 1, qGpScore[i], qGpChanged[i], aGpScore[i], aGpChanged[i], qRScore[i], qRChanged[i], aRScore[i], aRChanged[i], qEpsChanged[i], qEpsScore[i], aEpsChanged[i], aEpsScore[i]]
+        array = [symbol, i + 1, qGpScore[i], qGpChanged[i], aGpScore[i], aGpChanged[i], qRScore[i], qRChanged[i], aRScore[i], aRChanged[i], qEpsScore[i], qEpsChanged[i], aEpsScore[i], aEpsChanged[i]]
         normalArrays.append(array)
     totalArray = [symbol, qGpTotalScore, aGpTotalScore, qRTotalScore, aRTotalScore, qEpsTotalScore, aEpsTotalScore]
     totalArray.append(calSum((totalArray)))
@@ -153,7 +161,7 @@ def getStockDataFromXlsx(market):
 
 def main():
     normalDataFrameCols = ["Stock", "Period", "Quarterly Gross Profit Score", "Quarterly Gross Profit Changed %", "Annual Gross Profit Score", "Annual Gross Profit Changed %", "Quarterly Revenue Score", "Quarterly Revenue Changed %", "Annual Revenue Score", "Annual Revenue Changed %", "Quarterly EPS Score", "Quarterly EPS Changed %", "Annual EPS Score", "Annual EPS Changed %"]
-    #totalDataFrameCols = ["Stock", "Total Quarterly Gross Profit Score", "Total Annual Gross Profit Score", "Total Quarterly Revenue Score", "Total Annual Revenue Score", "Total Quarterly EPS Score", "Total Annual EPS Score", "Total Score"]
+    totalDataFrameCols = ["Stock", "Total Quarterly Gross Profit Score", "Total Annual Gross Profit Score", "Total Quarterly Revenue Score", "Total Annual Revenue Score", "Total Quarterly EPS Score", "Total Annual EPS Score", "Total Score"]
     market = input("Enter the market(AMEX, NYSE, NASDAQ): ")
     stockList = getStockDataFromXlsx(market)
     normalArrays = []
@@ -163,13 +171,13 @@ def main():
         try:
             mainArray = getStockDataMain(stock)
             normalArrays +=  mainArray[0]
-            #totalArrays += mainArray[1]
+            totalArrays += mainArray[1]
         except:
             print("Skipped: " + str(stock))
     normalDataOutput = pd.DataFrame(normalArrays, columns = normalDataFrameCols)
-    #totalScoreOutput = pd.DataFrame(totalArrays, columns = totalDataFrameCols)
+    totalScoreOutput = pd.DataFrame(totalArrays, columns = totalDataFrameCols)
     normalDataOutput.to_csv(str(market) + "_Score" + ".csv", index = False)
-    #totalScoreOutput.to_csv(str(market) + "_TotalScore" + ".csv" , index = False)
+    totalScoreOutput.to_csv(str(market) + "_TotalScore" + ".csv" , index = False)
     return
 
 main()
