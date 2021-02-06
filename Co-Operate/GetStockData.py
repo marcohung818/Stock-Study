@@ -62,7 +62,7 @@ def getQuarterlyEps(symbol):
     except:
         print('Error when getting QuarterlyEps of ' + symbol)
         return
-    parsed_data = {x['date']:x['v1'] for x in data_quarter}
+    parsed_data = {x['date']:x['v2'] for x in data_quarter}
     # get values of periods period_to_get
     eps = list(parsed_data.values())[-1*period_to_get:]
     eps.reverse()
